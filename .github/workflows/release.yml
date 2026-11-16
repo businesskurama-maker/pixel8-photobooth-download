@@ -1,0 +1,33 @@
+name: Make release from the uploaded installer
+# When a new Pixel8Photobooth-Setup.exe is pushed here, publish it as the latest release,
+# so this link always gives the newest version:
+# https://github.com/businesskurama-maker/pixel8-photobooth-download/releases/latest/download/Pixel8Photobooth-Setup.exe
+on:
+  push:
+    branches: [main]
+    paths: ['Pixel8Photobooth-Setup.exe', 'VERSION']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V=$(cat VERSION)
+          TAG="v$V"
+          NOTES="Pixel8 Photobooth $V for Windows 10 and 11.
+
+          Download **Pixel8Photobooth-Setup.exe**, run it, and the app adds a desktop icon.
+          If Windows shows \"Windows protected your PC\", click **More info**, then **Run anyway**.
+
+          Buy a license: https://dinkykong.pro/pixel8.photobooth"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" Pixel8Photobooth-Setup.exe --clobber
+          else
+            gh release create "$TAG" Pixel8Photobooth-Setup.exe --title "Pixel8 Photobooth $V" --notes "$NOTES" --latest
+          fi
